@@ -1,6 +1,21 @@
 # fox 安全学习 · 控分版
 
-基于 [Scwizard/jiangsu-safety-competition](https://github.com/Scwizard/jiangsu-safety-competition/) 改造，保留原作者署名与 Apache-2.0 许可证。移动适配、控分改造署名：**fox**。
+**fox 独家定制 · Copyright (c) 2026 fox · MIT License**
+
+fox 新增代码采用 [MIT 许可证](LICENSE)。基于上游的原始代码仍按原许可证使用，原作者与第三方许可见 [第三方说明](THIRD_PARTY_NOTICES.md)，原 Apache-2.0 文本已独立归档。
+
+## v1.1 学校选择与环境配置
+
+电脑版沿用用户提供的 v1.0.4 命令行操作方式，启动菜单提供「开始运行 / 环境配置 / 环境检测」。学校可按关键词搜索、输入编号选择并确认；未找到可重新搜索，留空列出全部。密码输入不回显。
+
+- **无需 Python 的电脑版**：[下载 fox-safety-desktop.exe](desktop/fox-safety-desktop.exe)。双击运行，选择 2 配置，选择 3 检测环境。
+- **源码首次运行**：Windows 双击 `setup-environment.bat` 安装依赖并配置；也可执行 `python configure.py`。
+- 配置包括默认学校关键词、答题间隔、请求超时、后端地址和端口、管理密码。环境变量优先于 `.env`，后端先使用 `mobile/.env`，不存在时读取仓库根目录 `.env`。
+- EXE 配置保存在 EXE 同目录 `.env`，持久题库放在 `%LOCALAPPDATA%/fox/safety-learning`；不要将 `.env` 上传 GitHub。
+- 手机端可留空关键词加载全部学校，登录前确认学校；管理端新增环境检测面板。
+- 最新 APK：[fox-safety-1.1.0.apk](fox-safety-1.1.0.apk)。在线功能仍需部署后端。
+
+默认后端只监听 `127.0.0.1`。局域网手机接入时在配置中将 `FOX_HOST` 改为 `0.0.0.0`；公网使用 HTTPS 反向代理。环境配置只是应用配置，不会自动安装 Python 或发布服务器。
 
 ## 电脑版与管理端
 
@@ -23,7 +38,7 @@ python server.py
 
 ## 下载与手机使用
 
-- 本仓库根目录 `fox-safety-1.0.0.apk`：Android 8.0 及以上，内置离线题库。
+- 本仓库根目录 `fox-safety-1.1.0.apk`：Android 8.0 及以上，内置离线题库。
 - 学校平台、实训和控分功能依赖后端。APK 点击「连接服务」填写服务器地址。
 - 默认预填 `https://jouxyfwglzx.cn`；**该域名后端尚未部署成功**，不能把预填地址视为已上线。
 - 后端及手机页面源码在 `mobile/`。进入该目录安装其 `requirements.txt` 后运行 `python server.py`，监听 5080 端口。

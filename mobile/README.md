@@ -2,7 +2,7 @@
 
 ## Android APK
 
-`fox-safety-1.0.0.apk` 为已签名 Android 安装包，要求 Android 8.0 或更高版本。内置 2000 条双源题库，可离线检索；顶部可复制 fox 页面脚本。学校与实训功能仍需连接 Python 后端。
+`fox-safety-1.1.0.apk` 为已签名 Android 安装包，要求 Android 8.0 或更高版本。内置 2000 条双源题库，可离线检索；顶部可复制 fox 页面脚本。学校与实训功能仍需连接 Python 后端。
 
 点击「连接服务」可设置地址，默认填入用户指定的 `https://jouxyfwglzx.cn`。该服务器尚未部署成功：当前 SSH 密钥被拒绝，域名预填不代表后端已上线。
 

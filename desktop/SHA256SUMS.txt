@@ -1,2 +1,2 @@
-b0ed6ae325b5e1b5bde009004f8355a5d4ae9a72f64a81a41f2d114cab01a5fd  fox-safety-desktop.exe
+c1a613d544b09e155dc1705475410cdbc213bcf634acb290ef0bf1fa03e4b7c3  fox-safety-desktop.exe
 0669947a3f82ba22a52a12b42319949bcf407087551ae6d74725e76f8648a60d  original-training-safety-v1.0.0.exe

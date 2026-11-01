@@ -1,3 +1,6 @@
+# Copyright (c) 2026 fox. SPDX-License-Identifier: MIT
+from fox_config import load_env,read_int
+load_env()
 from pathlib import Path
 import hashlib
 import json
@@ -26,7 +29,7 @@ def client():
     return clients[key]
 
 def remote(path, data=None):
-    r = client().post(BASE+path, data=data or {}, timeout=25)
+    r = client().post(BASE+path, data=data or {}, timeout=read_int("FOX_REQUEST_TIMEOUT",25,5,120))
     r.raise_for_status()
     return r.json()
 
@@ -47,6 +50,11 @@ def same_origin():
 @app.get('/')
 def home():
     return app.send_static_file('index.html')
+
+@app.get('/api/config')
+def public_config():
+    import os
+    return jsonify(schoolKeyword=os.environ.get('FOX_SCHOOL_KEYWORD',''),interval=read_int('FOX_INTERVAL',8,1,120),signature='Copyright (c) 2026 fox · MIT License')
 
 @app.get('/api/library')
 def library():
@@ -71,7 +79,7 @@ def schools():
 def captcha():
     stamp = str(int(time.time()*1000))
     session['stamp'] = stamp
-    r = client().get(BASE+'login/v1/getCaptcha', params={'timestamp':stamp}, timeout=25)
+    r = client().get(BASE+'login/v1/getCaptcha', params={'timestamp':stamp}, timeout=read_int("FOX_REQUEST_TIMEOUT",25,5,120))
     r.raise_for_status()
     return Response(r.content, content_type=r.headers.get('Content-Type','image/png'), headers={'Cache-Control':'no-store'})
 
@@ -125,4 +133,5 @@ from admin import install as install_admin
 install_admin(app, ROOT, bank)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=5080,debug=False)
+    import os
+    app.run(host=os.environ.get('FOX_HOST','127.0.0.1'),port=read_int('FOX_PORT',5080,1,65535),debug=False)

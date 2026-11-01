@@ -7,7 +7,7 @@
 // @grant        none
 // ==/UserScript==
 // 题库来源：用户提供的 https://temp.ordylan.com/answer.js
-// 移动适配与签名：fox；原题库作者权利保留。
+// 移动适配 Copyright (c) 2026 fox, MIT License；原题库作者权利保留。
 (() => {
 'use strict';
 if (window.__foxAssistant) { window.__foxAssistant.show(); return; }

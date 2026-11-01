@@ -1,3 +1,5 @@
+from fox_config import startup, read_int
+startup()
 from score_plan import build_plan
 from loguru import logger
 from utils import pwdEncrypt, searchCollegeByName, getCaptcha, login, logout, getUserIndex, getActivities, recordQuestion, startPaper, preparePaper, getNear, submitPaper, index, preparePaperPractice, startPaperPractice, submitPaperPractice, recordQuestionPractice
@@ -70,7 +72,16 @@ def saveMissing(missingList):
     with open(MISSING_FILE, "w", encoding="utf-8") as f:
         json.dump(history, f, ensure_ascii=False, indent=2)
 
+import sys
+import shutil
+from pathlib import Path
 script_dir = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    data_dir = Path(os.environ.get('LOCALAPPDATA', str(Path.home()))) / 'fox' / 'safety-learning'
+    data_dir.mkdir(parents=True, exist_ok=True)
+    for asset in ('database.db','donation.jpg'):
+        if not (data_dir/asset).exists(): shutil.copy2(Path(script_dir)/asset,data_dir/asset)
+    script_dir = str(data_dir)
 os.chdir(script_dir)
 print("切换到工作目录：", os.getcwd())
 
@@ -78,7 +89,7 @@ logger.info("题库：%s 有 %i 题" % (DB_FILE, count_questions()))
 
 logger.info("正在请求学校列表...")
 try:
-    schoolList = requests.post("https://mars.mycourse.cn/marsapi/api/login/v1/listTenant",headers=Headers).text
+    schoolList = requests.post("https://mars.mycourse.cn/marsapi/api/login/v1/listTenant",headers=Headers,timeout=read_int("FOX_REQUEST_TIMEOUT",25,5,120)).text
 except Exception:
     logger.error("网络错误。")
     input("网络错误，程序异常结束。")
@@ -86,13 +97,14 @@ except Exception:
 
 schoolList = json.loads(schoolList)
 logger.info("学校清单载入完成，请输入学校名称：")
-inSchoolName = input("请输入学校名称[支持关键词]：")
+inSchoolName = input("请输入学校关键词[留空使用配置或显示全部]：").strip() or os.environ.get("FOX_SCHOOL_KEYWORD", "")
 schoolCode = searchCollegeByName(inSchoolName, schoolList)
 logger.info("完成学校选择：%s" % schoolCode)
 logger.info("请输入用户名")
 username = input("请输入用户名：")
 logger.info("请输入密码")
-password = input("请输入密码：")
+from getpass import getpass
+password = getpass("请输入密码（不显示）：")
 password = pwdEncrypt(password) # MD5 32大
 timestamp = str(int(time.time() * 1000))
 logger.info("给用户投喂验证码...")
@@ -226,7 +238,7 @@ while True:
         logger.info("时长参考：每题6秒->9-10分钟；每题7秒->11分钟；每题8秒->13分钟；每题9秒->15分钟")
         logger.warning("若题目间隔过短，例如1秒，将会被系统判定为无效作答，并浪费一次答题机会！")
         try:
-            time_con = int(input("请输入每一题时长(秒)："))
+            time_con = int(input("请输入每一题时长(秒，回车使用配置)：").strip() or read_int("FOX_INTERVAL",8,1,120))
             if not 1 <= time_con <= 120: raise ValueError()
         except ValueError:
             logger.error("每题时长必须是1至120之间的整数。")

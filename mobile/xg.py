@@ -1,3 +1,4 @@
+from fox_config import read_int
 """Reimplemented HTML form bridge based on static EXE inspection; never executes EXE code."""
 import re
 import requests
@@ -63,11 +64,11 @@ def install(app, client):
             form=forms[index]; allowed={f['name'] for f in form['fields']}
             values={k:v for k,v in d.get('values',{}).items() if k in allowed or k in ('__EVENTTARGET','__EVENTARGUMENT','ImageButton1.x','ImageButton1.y')}
             body=urlencode(values,doseq=True,encoding='gbk',errors='strict')
-            r=c.post(form['action'],data=body,headers={'Content-Type':'application/x-www-form-urlencoded'},timeout=30,allow_redirects=False)
+            r=c.post(form['action'],data=body,headers={'Content-Type':'application/x-www-form-urlencoded'},timeout=read_int("FOX_REQUEST_TIMEOUT",25,5,120),allow_redirects=False)
         else:
-            r=c.get(valid(d.get('url','/login.aspx')),timeout=30,allow_redirects=False)
+            r=c.get(valid(d.get('url','/login.aspx')),timeout=read_int("FOX_REQUEST_TIMEOUT",25,5,120),allow_redirects=False)
         for _ in range(5):
             if not r.is_redirect: break
-            r=c.get(valid(urljoin(r.url,r.headers['Location'])),timeout=30,allow_redirects=False)
+            r=c.get(valid(urljoin(r.url,r.headers['Location'])),timeout=read_int("FOX_REQUEST_TIMEOUT",25,5,120),allow_redirects=False)
         r.raise_for_status()
         return parse(r,old)

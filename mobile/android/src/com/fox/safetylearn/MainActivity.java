@@ -76,10 +76,10 @@ public class MainActivity extends Activity {
  private WebResourceResponse response(String mime,String text){return new WebResourceResponse(mime,"UTF-8",new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)));}
  private boolean sameOrigin(String url,String origin){try{Uri a=Uri.parse(url),b=Uri.parse(origin);return a.getScheme()!=null&&a.getScheme().equals(b.getScheme())&&a.getHost()!=null&&a.getHost().equals(b.getHost())&&a.getPort()==b.getPort();}catch(Exception e){return false;}}
  private void button(LinearLayout row,String text,Runnable action){Button b=new Button(this);b.setText(text);b.setTextSize(12);row.addView(b,new LinearLayout.LayoutParams(0,-2,1));b.setOnClickListener(v->action.run());}
- private void offline(){status.setText("离线模式 · 题库已内置 · 学校/实训功能请连接服务");web.loadUrl(LOCAL);}
+ private void offline(){status.setText("fox 独家定制 · MIT · 离线题库 · 学校/实训功能请连接服务");web.loadUrl(LOCAL);}
  private void settings(){
   EditText address=new EditText(this);address.setSingleLine(true);address.setText(getPreferences(0).getString("server","https://jouxyfwglzx.cn"));address.setInputType(17);
-  new AlertDialog.Builder(this).setTitle("连接 fox 后端").setMessage("输入电脑或服务器的地址。局域网需连接同一 Wi-Fi，并启动 python server.py。HTTP 会明文传输账号密码；公网请使用 HTTPS。").setView(address).setPositiveButton("连接",(d,w)->{
+  new AlertDialog.Builder(this).setTitle("fox 独家定制 · 环境配置").setMessage("输入电脑或服务器的地址。局域网需连接同一 Wi-Fi，并启动 python server.py。HTTP 会明文传输账号密码；公网请使用 HTTPS。").setView(address).setPositiveButton("连接",(d,w)->{
    String value=address.getText().toString().trim().replaceAll("/+$","");Uri u=Uri.parse(value);
    if(!("http".equals(u.getScheme())||"https".equals(u.getScheme()))||u.getHost()==null||u.getUserInfo()!=null||u.getQuery()!=null||u.getFragment()!=null||!(u.getPath()==null||u.getPath().isEmpty())){Toast.makeText(this,"请输入 http(s)://主机:端口，不包含路径",Toast.LENGTH_LONG).show();return;}
    server=value;getPreferences(0).edit().putString("server",value).apply();status.setText("在线服务 · "+value);web.loadUrl(value+"/");

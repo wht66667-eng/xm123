@@ -1,3 +1,4 @@
+# Copyright (c) 2026 fox. SPDX-License-Identifier: MIT
 """fox authenticated question-bank administration. Disabled without FOX_ADMIN_PASSWORD."""
 import os
 import secrets
@@ -46,6 +47,12 @@ def install(app, root, script_bank):
     def admin_logout():
         session.pop('fox_admin',None)
         return jsonify(ok=True)
+
+    @app.get('/api/admin/environment')
+    def admin_environment():
+        import platform
+        import importlib.metadata
+        return jsonify(Python=platform.python_version(),system=platform.system(),Flask=importlib.metadata.version('Flask'),databaseExists=(root/'upstream/database.db').exists(),configExists=__import__('fox_config').config_path().exists(),host=os.environ.get('FOX_HOST','127.0.0.1'),port=os.environ.get('FOX_PORT','5080'),requestTimeout=os.environ.get('FOX_REQUEST_TIMEOUT','25'),signature='Copyright (c) 2026 fox · MIT License')
 
     @app.get('/api/admin/questions')
     def admin_questions():

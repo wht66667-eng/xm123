@@ -1,3 +1,4 @@
+# Copyright (c) 2026 fox. SPDX-License-Identifier: MIT
 """fox: deterministic score planning for equal-weight, all-or-nothing marking."""
 from decimal import Decimal, InvalidOperation
 

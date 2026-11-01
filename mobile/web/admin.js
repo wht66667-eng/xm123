@@ -11,3 +11,5 @@ $('clear').onclick=()=>{$('editor').reset();$('question').readOnly=false;$('ques
 $('logout').onclick=()=>run(async()=>{await api('logout',{});$('workspace').hidden=true;$('adminLogin').hidden=false;$('records').replaceChildren();message('已退出管理端')});
 $('export').onclick=()=>run(async()=>{const r=await fetch('/api/admin/export');if(!r.ok)throw Error('导出失败，请重新登录');const url=URL.createObjectURL(await r.blob());const a=element('a','');a.href=url;a.download='fox-question-bank.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);message('导出文件已生成')});
 $('import').onchange=()=>run(async()=>{const f=$('import').files[0];if(!f)return;try{if(f.size>1024*1024)throw Error('文件不能超过1MB');const rows=JSON.parse(await f.text());if(!Array.isArray(rows))throw Error('文件必须是JSON数组');if(!confirm(`确认导入 ${rows.length} 条记录？相同 ID 将更新，请先备份。`))return;const j=await api('import',rows);message(`导入成功：${j.count} 条`);page=0;await load()}finally{$('import').value=''}});
+
+$('environment').onclick=()=>run(async()=>{const j=await api('environment');$('environmentInfo').textContent=Object.entries(j).map(([k,v])=>k+'：'+v).join('\n')});
