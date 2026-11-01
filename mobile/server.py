@@ -121,6 +121,8 @@ def adapter():
 
 from xg import install
 install(app, client)
+from admin import install as install_admin
+install_admin(app, ROOT, bank)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=5080,debug=False)

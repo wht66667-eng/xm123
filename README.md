@@ -2,6 +2,25 @@
 
 基于 [Scwizard/jiangsu-safety-competition](https://github.com/Scwizard/jiangsu-safety-competition/) 改造，保留原作者署名与 Apache-2.0 许可证。移动适配、控分改造署名：**fox**。
 
+## 电脑版与管理端
+
+- [原版实训 EXE](desktop/original-training-safety-v1.0.0.exe)：用户提供的原始文件，内容未修改。
+- [fox 控分电脑版](desktop/fox-safety-desktop.exe)：Windows 单文件控制台程序，双击运行，无需安装 Python。与原版实训 EXE 对应不同平台。
+- [题库管理端源码](mobile/admin.py)：启动手机后端后访问 `/admin`，支持题库查询、新增、修改、删除、JSON 导入导出。管理端不是另一套远程账号管理系统，不管理学生密码或成绩。
+
+PowerShell 中设置管理密码并启动后端：
+
+```powershell
+cd mobile
+$env:FOX_ADMIN_PASSWORD = '请替换为你自己的长随机密码'
+python -m pip install -r requirements.txt
+python server.py
+```
+
+打开 `http://127.0.0.1:5080/admin`。未配置密码时管理 API 禁用；公网部署必须使用 HTTPS。不要将实际密码提交到 GitHub。每次更改题库前可先导出备份；管理员编辑会影响手机平台题库，不会修改已打包 EXE 内部的题库副本。
+
+管理端测试：在 `mobile` 目录运行 `python -m unittest test_admin.py`。阿里云后端尚未部署，管理页面暂不能通过默认公网域名访问。
+
 ## 下载与手机使用
 
 - 本仓库根目录 `fox-safety-1.0.0.apk`：Android 8.0 及以上，内置离线题库。

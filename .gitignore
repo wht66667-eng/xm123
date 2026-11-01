@@ -12,3 +12,5 @@ mobile/android/build/
 *.jks
 *.keystore
 .env
+
+mobile/screenshots/
