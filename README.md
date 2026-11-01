@@ -17,11 +17,6 @@ fox 新增代码采用 [MIT 许可证](LICENSE)。基于上游的原始代码仍
 
 默认后端只监听 `127.0.0.1`。局域网手机接入时在配置中将 `FOX_HOST` 改为 `0.0.0.0`；公网使用 HTTPS 反向代理。环境配置只是应用配置，不会自动安装 Python 或发布服务器。
 
-## 电脑版与管理端
-
-- [原版实训 EXE](desktop/original-training-safety-v1.0.0.exe)：用户提供的原始文件，内容未修改。
-- [fox 控分电脑版](desktop/fox-safety-desktop.exe)：Windows 单文件控制台程序，双击运行，无需安装 Python。与原版实训 EXE 对应不同平台。
-- [题库管理端源码](mobile/admin.py)：启动手机后端后访问 `/admin`，支持题库查询、新增、修改、删除、JSON 导入导出。管理端不是另一套远程账号管理系统，不管理学生密码或成绩。
 
 PowerShell 中设置管理密码并启动后端：
 
