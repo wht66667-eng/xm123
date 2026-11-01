@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+build/
+dist/
+*.spec
+*.log
+missing_questions.json
+captcha.png
+mobile/android/build/
+*.idsig
+*.jks
+*.keystore
+.env

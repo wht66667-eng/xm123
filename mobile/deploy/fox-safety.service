@@ -1,0 +1,21 @@
+[Unit]
+Description=fox Safety Learning backend
+After=network.target
+
+[Service]
+Type=simple
+User=fox-safety
+Group=fox-safety
+WorkingDirectory=/opt/fox-safety
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/fox-safety/.venv/bin/gunicorn --workers 1 --threads 8 --timeout 90 --bind 127.0.0.1:5080 server:app
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/fox-safety/upstream
+
+[Install]
+WantedBy=multi-user.target
