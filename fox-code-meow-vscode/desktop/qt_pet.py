@@ -1,7 +1,7 @@
 """Native alpha desktop host, implemented with Qt. MIT fox."""
 import sys,time
 from pathlib import Path
-from PySide6.QtWidgets import QApplication,QWidget,QMenu,QLabel
+from PySide6.QtWidgets import QApplication,QWidget,QMenu,QLabel,QInputDialog,QLineEdit
 from PySide6.QtGui import QPainter,QPixmap,QColor,QPainterPath,QFont
 from PySide6.QtCore import Qt,QTimer,QRectF,QPoint
 
@@ -19,6 +19,9 @@ class SpeechBubble(QWidget):
 def run(test_output=None):
     from pet import Pet,DATA
     from qt_assistant import AssistantWindow
+    if test_output:
+        import tempfile,pet as pet_module
+        fixture=tempfile.TemporaryDirectory(prefix='fox-dialog-test-');DATA=Path(fixture.name);pet_module.DATA=DATA;pet_module.STATE=DATA/'pet.json'
     app=QApplication(sys.argv);app.setQuitOnLastWindowClosed(False)
     model=Pet();model.root.update();model.root.withdraw()
     assets=Path(getattr(sys,'_MEIPASS',Path(__file__).resolve().parents[1]))/'assets'
@@ -53,10 +56,19 @@ def run(test_output=None):
                 if not self.dragged:model.pat()
         def mouseDoubleClickEvent(self,event):
             model.move_until=0;model.pause_until=time.monotonic()+5;model.open_assistant()
+        def rename(self):
+            model.move_until=0;model.pause_until=time.monotonic()+60
+            value,ok=QInputDialog.getText(self,'fox · 我该怎么称呼你','称呼（最多30字）',QLineEdit.Normal,str(model.state.get('name','')))
+            model.pause_until=time.monotonic()+4
+            if ok and value.strip():
+                model.state['name']=value.strip()[:30];model.save();model.bubble_until=time.monotonic()+4;model.message.set(model.state['name']+'，记住啦。以后就这样叫你，喵～')
+        def focus(self):
+            minutes,ok=QInputDialog.getInt(self,'一起专注','专注几分钟？',25,1,180)
+            if ok:model.focus_minutes=minutes;model.focus_end=time.monotonic()+minutes*60;model.bubble_until=time.monotonic()+4;model.message.set('好呀，我安静陪你专注。')
         def contextMenuEvent(self,event):
             model.move_until=0;model.pause_until=time.monotonic()+5
             menu=QMenu(self);menu.setStyleSheet('QMenu{background:#FFF8EF;color:#66483B;border:1px solid #E8BFA5;padding:7px;border-radius:10px;font-size:14px;}QMenu::item{padding:8px 22px;}QMenu::item:selected{background:#FFE1C8;border-radius:6px;}')
-            for title,fn in [('聊天 / 文档 / API / 文件管理',model.open_assistant),('摸摸头',model.pat),('投喂',model.feed),('休息 / 睡醒',model.sleep),('自由走动 / 原地停留',model.toggle_roam),('专注计时',model.focus),('停止计时',model.stop_focus),('设置称呼',model.rename),('减少动画',model.toggle_motion),('查看记录',model.records),('退出狐狸娘',self.quit)]:menu.addAction(title,fn)
+            for title,fn in [('聊天 / 文档 / API / 文件管理',model.open_assistant),('摸摸头',model.pat),('投喂',model.feed),('休息 / 睡醒',model.sleep),('自由走动 / 原地停留',model.toggle_roam),('专注计时',self.focus),('停止计时',model.stop_focus),('设置称呼',self.rename),('减少动画',model.toggle_motion),('查看记录',model.records),('退出狐狸娘',self.quit)]:menu.addAction(title,fn)
             menu.exec_(event.globalPos())
         def quit(self):
             self.timer.stop();model.close();self.close();app.quit()
@@ -73,6 +85,14 @@ def run(test_output=None):
                 assert pet.testAttribute(Qt.WA_TranslucentBackground)
                 assert pet.windowFlags()&Qt.FramelessWindowHint
                 assert pet.x()!=300, "pet must roam after idle delay"
+                def accept_name():
+                    dialog=app.activeModalWidget()
+                    assert isinstance(dialog,QInputDialog)
+                    dialog.setTextValue('测试称呼');dialog.accept()
+                QTimer.singleShot(100,accept_name);pet.rename();assert model.state['name']=='测试称呼'
+                def accept_minutes():
+                    dialog=app.activeModalWidget();assert isinstance(dialog,QInputDialog);dialog.setIntValue(5);dialog.accept()
+                QTimer.singleShot(100,accept_minutes);pet.focus();assert model.focus_minutes==5
                 pet.grab().save(str(test_output))
             finally: pet.quit()
         QTimer.singleShot(4200,verify)

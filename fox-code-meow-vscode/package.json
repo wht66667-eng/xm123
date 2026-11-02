@@ -2,7 +2,7 @@
   "name": "fox-code-meow",
   "displayName": "fox 喵喵代码老师",
   "description": "手动触发的中文猫娘代码老师：终端讲解与建议、本地知识库、自定义AI接口。",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "publisher": "fox-local",
   "author": "fox",
   "license": "MIT",

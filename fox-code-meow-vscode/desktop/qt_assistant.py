@@ -3,7 +3,7 @@ import json,os,sys,threading,queue,datetime
 from pathlib import Path
 from PySide6.QtCore import Qt,QTimer,Signal,QObject,QSize
 from PySide6.QtGui import QPainter,QPixmap,QColor,QFont,QPainterPath,QIcon,QKeySequence,QShortcut
-from PySide6.QtWidgets import (QWidget,QFrame,QLabel,QPushButton,QVBoxLayout,QHBoxLayout,QStackedWidget,QScrollArea,QPlainTextEdit,QCheckBox,QLineEdit,QComboBox,QFileDialog,QDialog,QDialogButtonBox,QListWidget,QListWidgetItem,QSizePolicy)
+from PySide6.QtWidgets import (QWidget,QFrame,QLabel,QPushButton,QVBoxLayout,QHBoxLayout,QStackedWidget,QScrollArea,QPlainTextEdit,QCheckBox,QLineEdit,QComboBox,QFileDialog,QDialog,QDialogButtonBox,QListWidget,QListWidgetItem,QSizePolicy,QTextBrowser)
 from assistant import Library,save_config,ask
 from protocols import resolve
 from file_actions import validate_target,delete_original
@@ -59,7 +59,7 @@ class ConfirmDialog(QDialog):
 
 class AssistantWindow(QWidget):
     def __init__(self,model,data,parent=None):
-        super().__init__(parent,Qt.Window);self.model=model;self.data=Path(data);self.library=Library(self.data/'knowledge-desktop');self.workers=queue.Queue();self.busy=False;self.success_callback=None;self.setObjectName('lounge');self.setWindowTitle('fox · 陪伴小窝');self.resize(1040,750);self.setMinimumSize(820,620);self.setStyleSheet(STYLE);self.setWindowIcon(QIcon(avatar(64)));self.config=self.load_config()
+        super().__init__(parent,Qt.Window);self.model=model;self.data=Path(data);self.library=Library(self.data/'knowledge-desktop');self.workers=queue.Queue();self.history=[];self.pending_question=None;self.busy=False;self.success_callback=None;self.setObjectName('lounge');self.setWindowTitle('fox · 陪伴小窝');self.resize(1040,750);self.setMinimumSize(820,620);self.setStyleSheet(STYLE);self.setWindowIcon(QIcon(avatar(64)));self.config=self.load_config()
         shell=QHBoxLayout(self);shell.setContentsMargins(0,0,0,0);shell.setSpacing(0)
         rail=QFrame();rail.setObjectName('rail');rail.setFixedWidth(185);rv=QVBoxLayout(rail);rv.setContentsMargins(18,28,18,20);rv.setSpacing(10)
         icon=QLabel();icon.setPixmap(avatar(68));rv.addWidget(icon);rv.addWidget(text('fox','brand'));rv.addWidget(text('一直在这里，\n陪你一起进步。','muted'));rv.addSpacing(24)
@@ -69,7 +69,7 @@ class AssistantWindow(QWidget):
         rv.addStretch();rv.addWidget(text('小小的日常\n也很了不起。 ♡','muted'));self.pet_icon=QLabel();self.pet_icon.setPixmap(QPixmap(str(ASSETS/'pat-3.png')).scaled(130,130,Qt.KeepAspectRatio,Qt.SmoothTransformation));rv.addWidget(self.pet_icon,0,Qt.AlignCenter)
         shell.addWidget(rail);main=QVBoxLayout();main.setContentsMargins(28,25,28,16);shell.addLayout(main,1)
         head=QHBoxLayout();titlebox=QVBoxLayout();titlebox.addWidget(text('今天也一起进步吧 ฅ','title'));titlebox.addWidget(text('有问题时告诉我，我们把它慢慢拆开。','muted'));head.addLayout(titlebox,1);self.badge=text('已配置' if self.config else '待配置','badge');head.addWidget(self.badge,0,Qt.AlignTop);main.addLayout(head);main.addSpacing(12);main.addWidget(self.stack,1)
-        self.status=text('本地资料不联网；只有点击发送才调用 AI。','muted');main.addWidget(self.status)
+        self.status=text('点击发送会附带本窗口最近6轮对话；清空聊天可重置。资料导入和搜索不联网。','muted');main.addWidget(self.status)
         self.build_chat();self.build_docs();self.build_settings();self.build_files();self.switch(0);self.refresh_docs();self.timer=QTimer(self);self.timer.timeout.connect(self.poll);self.timer.start(100)
     def load_config(self):
         try:return json.loads((self.data/'desktop-ai.json').read_text('utf-8'))
@@ -80,16 +80,30 @@ class AssistantWindow(QWidget):
     def build_chat(self):
         page=JournalSurface();v=QVBoxLayout(page);v.setContentsMargins(12,12,12,0);self.scroll=QScrollArea();self.scroll.setWidgetResizable(True);self.scroll.viewport().setAutoFillBackground(False);self.log=QWidget();self.log.setStyleSheet('background:transparent;');self.messages=QVBoxLayout(self.log);self.messages.setAlignment(Qt.AlignTop);self.messages.setSpacing(16);self.scroll.setWidget(self.log);v.addWidget(self.scroll,1)
         self.add_bubble('欢迎回来呀，今天想学什么？\n可以把资料放进小书包，我们慢慢看。')
-        chips=QHBoxLayout();chips.addWidget(btn('⌘  怎么解释代码',lambda:self.add_bubble('在 VS Code 中选中代码，右键选择 fox 解析或建议。也可以将代码粘贴到这里，再点击发送。')));chips.addWidget(btn('▤  查看我的资料',lambda:self.switch(1)));chips.addStretch();v.addLayout(chips)
+        chips=QHBoxLayout();chips.addWidget(btn('⌘  怎么解释代码',lambda:self.add_bubble('在 VS Code 中选中代码，右键选择 fox 解析或建议。也可以将代码粘贴到这里，再点击发送。')));chips.addWidget(btn('▤  查看我的资料',lambda:self.switch(1)));chips.addWidget(btn('清空聊天',self.clear_chat));chips.addStretch();v.addLayout(chips)
         composer=QFrame();composer.setObjectName('composer');cv=QVBoxLayout(composer);cv.setContentsMargins(12,10,12,9);self.question=QPlainTextEdit();self.question.setPlaceholderText('和 fox 说句话…');self.question.setFixedHeight(68);cv.addWidget(self.question);actions=QHBoxLayout();actions.addWidget(btn('＋ 资料',lambda:self.switch(1)));self.attach=QCheckBox('附带匹配资料');self.attach.setToolTip('开启后，最多3段匹配资料会随问题发送给当前AI。');actions.addWidget(self.attach);actions.addStretch();self.send_button=btn('发送  ➤',self.send,'primary');actions.addWidget(self.send_button);cv.addLayout(actions);v.addWidget(composer);self.stack.addWidget(page);self.shortcut=QShortcut(QKeySequence('Ctrl+Return'),self);self.shortcut.activated.connect(self.send)
     def add_bubble(self,value,user=False):
         row=QWidget();r=QHBoxLayout(row);r.setContentsMargins(0,0,0,0);r.setSpacing(10)
         if user:r.addStretch(1)
         else:
             face=QLabel();face.setPixmap(avatar());face.setFixedSize(44,44);r.addWidget(face,0,Qt.AlignTop)
-        bubble=QFrame();bubble.setMaximumWidth(510);bubble.setStyleSheet('QFrame{background:%s;border:1px solid %s;border-radius:19px;}'%('#DDE6CA' if user else '#FFF0DF','#C7D3B2' if user else '#EDD0B2'));bv=QVBoxLayout(bubble);bv.setContentsMargins(17,12,17,11);label=text(str(value));label.setTextFormat(Qt.PlainText);label.setTextInteractionFlags(Qt.TextSelectableByMouse);label.setStyleSheet('border:0;background:transparent;line-height:1.5;');bv.addWidget(label);time=text(datetime.datetime.now().strftime('%H:%M'),'muted');time.setStyleSheet('border:0;background:transparent;color:#9A8571;font-size:10px;');bv.addWidget(time);r.addWidget(bubble)
+        bubble=QFrame();bubble.setMaximumWidth(510);bubble.setStyleSheet('QFrame{background:%s;border:1px solid %s;border-radius:19px;}'%('#DDE6CA' if user else '#FFF0DF','#C7D3B2' if user else '#EDD0B2'));bv=QVBoxLayout(bubble);bv.setContentsMargins(17,12,17,11);label=QTextBrowser();label.setOpenExternalLinks(False);label.setOpenLinks(False);label.setFrameShape(QFrame.NoFrame);label.setStyleSheet('border:0;background:transparent;padding:0;');label.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        import re
+        display=re.sub(r'[^]*','',str(value))
+        label.setPlainText(display) if user else label.setMarkdown(display)
+        label.document().setTextWidth(450);label.setMinimumWidth(220);label.setFixedHeight(max(36,int(label.document().size().height())+10));bv.addWidget(label)
+        def resize_text():
+            label.document().setTextWidth(max(180,label.viewport().width()));label.setFixedHeight(max(36,int(label.document().size().height())+10))
+        QTimer.singleShot(60,resize_text);time=text(datetime.datetime.now().strftime('%H:%M'),'muted');time.setStyleSheet('border:0;background:transparent;color:#9A8571;font-size:10px;');bv.addWidget(time);r.addWidget(bubble)
         if not user:r.addStretch(1)
         self.messages.addWidget(row);QTimer.singleShot(30,lambda:self.scroll.verticalScrollBar().setValue(self.scroll.verticalScrollBar().maximum()))
+    def clear_chat(self):
+        if self.busy:self.status.setText('当前回复结束后再清空聊天。');return
+        self.history.clear()
+        while self.messages.count():
+            item=self.messages.takeAt(0)
+            if item.widget():item.widget().deleteLater()
+        self.add_bubble('我们重新开始吧。你想先聊什么？');self.status.setText('本窗口聊天记录已清空；知识库和密钥保持不变。')
     def start_task(self,fn,done=None):
         if self.busy:self.status.setText('我还在处理上一件事，稍等一下喵。');return False
         self.busy=True;self.send_button.setEnabled(False);self.send_button.setText('阅读中…');self.status.setText('小爪子忙碌中，正在处理你这次操作…')
@@ -99,7 +113,9 @@ class AssistantWindow(QWidget):
         threading.Thread(target=worker,daemon=True).start();return True
     def poll(self):
         try:
-            ok,result,done=self.workers.get_nowait();self.busy=False;self.send_button.setEnabled(True);self.send_button.setText('发送  ➤');self.add_bubble(result);self.status.setText('完成啦，喵～' if ok else '未完成，错误详情已显示在聊天里。')
+            ok,result,done=self.workers.get_nowait();
+            if self.pending_question and ok:self.history.extend([{'role':'user','content':self.pending_question},{'role':'assistant','content':str(result)}]);self.history=self.history[-12:]
+            self.pending_question=None;self.busy=False;self.send_button.setEnabled(True);self.send_button.setText('发送  ➤');self.add_bubble(result);self.status.setText('完成啦，喵～' if ok else '未完成，错误详情已显示在聊天里。')
             if done:done()
             if not ok:self.switch(0)
         except queue.Empty:pass
@@ -108,9 +124,9 @@ class AssistantWindow(QWidget):
         question=self.question.toPlainText().strip()
         if not question:return
         if len(question)>6000:self.status.setText('一次最多6000字，问题可以拆小一点哦。');return
-        attach=self.attach.isChecked();self.add_bubble(question,True);self.question.clear()
+        attach=self.attach.isChecked();self.pending_question=question;self.add_bubble(question,True);self.question.clear();history=list(self.history);nickname=getattr(self.model,'state',{}).get('name','')
         def work():
-            hits=self.library.search(question) if attach else [];context='\n\n'.join(name+'\n'+chunk for score,name,chunk in hits);return ask(self.data,question,context)
+            hits=self.library.search(question) if attach else [];context='\n\n'.join(name+'\n'+chunk for score,name,chunk in hits);return ask(self.data,question,context,history=history,nickname=nickname)
         self.start_task(work)
     def build_docs(self):
         page=QWidget();v=QVBoxLayout(page);v.setContentsMargins(0,0,0,0);v.addWidget(text('小书包 · 我的资料库','title'));v.addWidget(text('把资料交给我，一起整理、学习。导入副本保存在本机。','muted'));drop=DropCard();drop.filesDropped.connect(self.import_paths);v.addWidget(drop)
