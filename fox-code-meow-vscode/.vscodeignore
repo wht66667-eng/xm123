@@ -1,0 +1,12 @@
+test/**
+node_modules/**
+*.vsix
+*.log
+screenshots/**
+.env*
+.*key*
+TEST-RESULTS.md
+test-artifacts/**
+
+**/__pycache__/**
+**/*.pyc

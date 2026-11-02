@@ -1,0 +1,8 @@
+node_modules/
+test-artifacts/
+__pycache__/
+*.pyc
+*.vsix
+desktop/*.exe
+.env*
+*.log

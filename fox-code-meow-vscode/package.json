@@ -1,0 +1,263 @@
+{
+  "name": "fox-code-meow",
+  "displayName": "fox 喵喵代码老师",
+  "description": "手动触发的中文猫娘代码老师：终端讲解与建议、本地知识库、自定义AI接口。",
+  "version": "0.4.0",
+  "publisher": "fox-local",
+  "author": "fox",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Education",
+    "Other"
+  ],
+  "extensionKind": [
+    "ui"
+  ],
+  "main": "./src/extension.cjs",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    },
+    "virtualWorkspaces": false
+  },
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "foxMeow.explainSelection",
+        "title": "fox：中文解析选中代码",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.explainLine",
+        "title": "fox：逐行讲解选中代码",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.explainFunction",
+        "title": "fox：讲解光标所在函数",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.explainFile",
+        "title": "fox：讲解当前文件",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.open",
+        "title": "fox：打开中文代码学习面板",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.setKey",
+        "title": "fox：设置当前AI接口的 API Key",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.deleteKey",
+        "title": "fox：移除已保存的 API Key",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.stop",
+        "title": "fox：停止当前解析",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.export",
+        "title": "fox：导出中文学习笔记",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.settings",
+        "title": "fox：设置语气、模型与显示位置",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.openTerminal",
+        "title": "fox：打开喵喵学习终端",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.openPanel",
+        "title": "fox：打开侧栏讲解面板",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.suggestSelection",
+        "title": "fox：给选中代码提出建议",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.configureAI",
+        "title": "fox：配置AI接口、模型和密钥",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.importKnowledge",
+        "title": "fox：导入本地知识文档",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.saveKnowledge",
+        "title": "fox：把选中代码记入知识库",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.searchKnowledge",
+        "title": "fox：搜索本地知识库（不调用AI）",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.openKnowledgeFolder",
+        "title": "fox：打开我的知识库文件夹",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.openPet",
+        "title": "fox：召唤桌面宠物",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.openHome",
+        "title": "fox：打开陪伴小屋",
+        "category": "喵喵代码老师"
+      },
+      {
+        "command": "foxMeow.chat",
+        "title": "fox：主动和伙伴聊聊天",
+        "category": "喵喵代码老师"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "foxMeow.explainSelection",
+          "when": "editorHasSelection",
+          "group": "foxMeow@1"
+        },
+        {
+          "command": "foxMeow.explainLine",
+          "when": "editorHasSelection",
+          "group": "foxMeow@2"
+        },
+        {
+          "command": "foxMeow.suggestSelection",
+          "when": "editorHasSelection",
+          "group": "foxMeow@2.5"
+        },
+        {
+          "command": "foxMeow.explainFunction",
+          "when": "editorTextFocus",
+          "group": "foxMeow@3"
+        },
+        {
+          "command": "foxMeow.explainFile",
+          "when": "editorTextFocus",
+          "group": "foxMeow@4"
+        },
+        {
+          "command": "foxMeow.saveKnowledge",
+          "when": "editorHasSelection",
+          "group": "foxMeow@5"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "foxMeow.explainSelection",
+        "key": "ctrl+alt+m",
+        "mac": "cmd+alt+m",
+        "when": "editorTextFocus && editorHasSelection"
+      }
+    ],
+    "configuration": {
+      "title": "fox 喵喵代码老师",
+      "properties": {
+        "foxMeow.model": {
+          "type": "string",
+          "default": "deepseek-flash",
+          "description": "当前AI接口提供的模型ID，可自行填写。",
+          "scope": "application"
+        },
+        "foxMeow.tone": {
+          "type": "string",
+          "enum": [
+            "元气猫娘",
+            "温柔猫娘",
+            "普通中文"
+          ],
+          "default": "元气猫娘",
+          "description": "轻度可爱语气，专业解释优先。"
+        },
+        "foxMeow.level": {
+          "type": "string",
+          "enum": [
+            "零基础",
+            "有编程基础"
+          ],
+          "default": "零基础"
+        },
+        "foxMeow.linesPerChunk": {
+          "type": "number",
+          "default": 80,
+          "minimum": 20,
+          "maximum": 160,
+          "description": "当前文件较长时按行分段，发送前显示请求段数。"
+        },
+        "foxMeow.maxSourceCharacters": {
+          "type": "number",
+          "default": 40000,
+          "minimum": 1000,
+          "maximum": 100000,
+          "description": "一次手动操作允许读取的代码上限；超出时要求缩小选区，不会静默截断。"
+        },
+        "foxMeow.requestTimeoutSeconds": {
+          "type": "number",
+          "default": 120,
+          "minimum": 15,
+          "maximum": 300
+        },
+        "foxMeow.redactSecrets": {
+          "type": "boolean",
+          "default": true,
+          "description": "发送前遮盖常见 API Key、密码和 Token 赋值；不能替代人工检查。"
+        },
+        "foxMeow.apiBase": {
+          "type": "string",
+          "default": "https://api.deepseek.com",
+          "scope": "application",
+          "description": "OpenAI兼容Chat Completions基址或完整接口URL；远程使用HTTPS，HTTP只允许本机。不同接口的密钥分别保存。"
+        },
+        "foxMeow.outputMode": {
+          "type": "string",
+          "enum": [
+            "终端",
+            "侧栏",
+            "两者"
+          ],
+          "default": "终端",
+          "description": "讲解和建议的输出位置。终端是专用学习终端，不是Shell。"
+        },
+        "foxMeow.useKnowledgeBase": {
+          "type": "boolean",
+          "default": true,
+          "description": "手动解析时先在本机检索知识库，最多3段相关片段会随代码一起发送到所配置的AI接口。导入和单独搜索不调用AI。"
+        },
+        "foxMeow.maxRequestsPerAction": {
+          "type": "number",
+          "default": 12,
+          "minimum": 1,
+          "maximum": 40,
+          "description": "一次手动操作允许的最大分段请求数，超出时要求缩小范围。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.cjs"
+  }
+}

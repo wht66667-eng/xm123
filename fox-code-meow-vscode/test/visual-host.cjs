@@ -1,0 +1,1 @@
+const vscode=require('vscode');exports.run=async()=>{await vscode.extensions.getExtension('fox-local.fox-code-meow').activate();await vscode.commands.executeCommand('foxMeow.openHome');await new Promise(r=>setTimeout(r,45000));};
