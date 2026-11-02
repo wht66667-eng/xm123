@@ -1,9 +1,10 @@
-"""fox 本地桌面陪伴。MIT © fox. 不读取文件内容、不调用网络。"""
+"""fox 本地桌面陪伴。MIT © fox. 文档导入在本机；AI仅主动发送时调用。"""
 import tkinter as tk
 from tkinter import simpledialog
 import json, os, time, random, socket, sys
 from PIL import Image, ImageTk
 from pathlib import Path
+import assistant_ui, file_actions
 
 DATA = Path(os.environ.get('APPDATA', str(Path.home()))) / 'fox-code-meow'
 DATA.mkdir(parents=True, exist_ok=True)
@@ -25,7 +26,7 @@ class Pet:
         self.reduce_motion = bool(self.state.get('reduceMotion',False))
         self.root = tk.Tk()
         self.root.title('fox · 桌面陪伴')
-        self.root.geometry('300x410+100+100')
+        self.root.geometry('300x450+100+100')
         self.root.configure(bg='#fff6e8')
         self.root.attributes('-topmost', True)
         self.sleeping = False
@@ -46,7 +47,9 @@ class Pet:
         bar = tk.Frame(self.root, bg='#fff6e8'); bar.pack(pady=8)
         for title, callback in [('摸摸', self.pat), ('小鱼干', self.feed), ('休息', self.sleep), ('专注', self.focus)]:
             tk.Button(bar, text=title, command=callback, relief='flat', bg='#ffe0b5', padx=8).pack(side='left', padx=3)
+        tk.Button(self.root,text='聊天 · 喂文件 · API设置',command=self.open_assistant,relief='flat',bg='#ffe0b5').pack(pady=3)
         menu = tk.Menu(self.root, tearoff=False)
+        menu.add_command(label='聊天 / 文档 / API / 删除知识库', command=self.open_assistant)
         menu.add_command(label='设置我的称呼', command=self.rename)
         menu.add_command(label='置顶 / 取消置顶', command=self.topmost)
         menu.add_command(label='停止专注计时', command=self.stop_focus)
@@ -58,6 +61,9 @@ class Pet:
         self.root.bind('<Button-3>', lambda e: menu.tk_popup(e.x_root,e.y_root))
         self.root.protocol('WM_DELETE_WINDOW', self.close)
         self.tick()
+    def open_assistant(self):
+        from assistant_ui import open_assistant
+        open_assistant(self,DATA)
     def toggle_quiet(self):
         self.quiet=not self.quiet; self.state['quiet']=self.quiet; self.save(); self.message.set('安静模式开启，代码状态不再打扰你。' if self.quiet else '小耳朵上线，恢复代码学习联动！')
     def toggle_motion(self):

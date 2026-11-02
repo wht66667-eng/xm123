@@ -1,5 +1,7 @@
 import tempfile, importlib.util, json, time
 from pathlib import Path
+import sys
+sys.path.insert(0,str(Path("desktop").resolve()))
 spec=importlib.util.spec_from_file_location('fox_pet',Path('desktop/pet.py').resolve());mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
 with tempfile.TemporaryDirectory() as temp:
     mod.DATA=Path(temp);mod.STATE=mod.DATA/'pet.json'
