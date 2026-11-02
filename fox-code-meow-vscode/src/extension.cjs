@@ -14,7 +14,7 @@ const SECRET = 'foxMeow.deepseek.apiKey';
 let panel; let controller; let running = false; let last = null; let context; let terminal; let lastEditor;
 let view = { code: '', notes: '', status: 'ฅ^•ﻌ•^ฅ 准备好啦！选一小段代码，我们一起把它读懂，喵～', meta: '仅手动触发 · 本地知识库 · 不修改源码' };
 
-function targetEndpoint() { return api.resolveEndpoint(vscode.workspace.getConfiguration('foxMeow').get('apiBase', 'https://api.deepseek.com')); }
+function targetEndpoint() { const cfg=vscode.workspace.getConfiguration('foxMeow');return api.resolveEndpoint(cfg.get('apiBase','https://api.deepseek.com'),cfg.get('protocol','auto')); }
 function personalKnowledge() { return path.join(context.globalStorageUri.fsPath, 'knowledge'); }
 function knowledgeRoots() { return [{ dir: path.join(context.extensionPath, 'knowledge'), label: '内置知识库' }, { dir: personalKnowledge(), label: '我的知识库' }]; }
 async function localHits(query) { return knowledge.search(await knowledge.loadDocuments(knowledgeRoots()), query, 3); }
@@ -74,19 +74,20 @@ async function setKey(endpoint = targetEndpoint()) {
 async function configureAI() {
   if (running) { vscode.window.showInformationMessage('先等当前讲解结束，或点停止，再换接口哦。'); return; }
   const config = vscode.workspace.getConfiguration('foxMeow');
-  const provider = await vscode.window.showQuickPick([
-    { label: 'DeepSeek 官方', value: 'https://api.deepseek.com', model: 'deepseek-flash' },
-    { label: '自定义 OpenAI 兼容接口', value: config.get('apiBase', 'https://api.deepseek.com'), model: '' },
-    { label: '本机模型（例如 Ollama 的 /v1 接口）', value: 'http://127.0.0.1:11434/v1', model: '' }
-  ], { title: 'fox · 选择AI接口', placeHolder: '配置不会调用AI；真正解析时才发送代码。' });
+  const presets=JSON.parse(await fs.readFile(path.join(context.extensionPath,'assets','providers.json'),'utf8'));
+  const ordered=['deepseek','custom','local','agnes','openai','anthropic','gemini','qwen','kimi'];
+  const provider=await vscode.window.showQuickPick(ordered.map(id=>presets.find(p=>p.id===id)).filter(Boolean).map(p=>({label:p.label,value:p.base||config.get('apiBase','https://api.deepseek.com'),model:p.models?.[0]||'',protocol:p.protocol,description:p.note||p.models?.join(' · ')})),{title:'fox · 选择AI服务商',placeHolder:'支持Agnes、OpenAI、Claude、Gemini及自定义接口；配置不发请求。'});
   if (!provider) return;
   const base = await vscode.window.showInputBox({ title: 'AI 接口地址', prompt: '可填基址、/v1 或完整 /chat/completions。远程需HTTPS。', value: provider.value, ignoreFocusOut: true, validateInput: value => { try { api.resolveEndpoint(value); return null; } catch (e) { return e.message; } } });
   if (!base) return;
-  const endpoint = api.resolveEndpoint(base);
-  const model = await vscode.window.showInputBox({ title: '模型 ID', prompt: '照服务商给出的模型ID填写；本机模型需先安装。', value: provider.model, ignoreFocusOut: true, validateInput: value => value.trim() && value.trim().length <= 128 && !/[\r\n]/.test(value) ? null : '请填写有效的模型ID。' });
+  const chosen=await vscode.window.showQuickPick([{label:'Chat Completions',value:'chat'},{label:'Responses API',value:'responses'},{label:'Messages API',value:'messages'}].sort((a,b)=>Number(b.value===provider.protocol)-Number(a.value===provider.protocol)),{title:'选择接入协议',placeHolder:'按服务商文档选择；Agnes支持三种协议。'});
+  if(!chosen)return;
+  const endpoint = api.resolveEndpoint(base,chosen.value);
+  const model = await vscode.window.showInputBox({ title: '模型 ID', prompt: (provider.description||'照服务商给出的模型ID填写；本机模型需先安装。'), value: provider.model, ignoreFocusOut: true, validateInput: value => value.trim() && value.trim().length <= 128 && !/[\r\n]/.test(value) ? null : '请填写有效的模型ID。' });
   if (!model) return;
   await config.update('apiBase', base.trim(), vscode.ConfigurationTarget.Global);
   await config.update('model', model.trim(), vscode.ConfigurationTarget.Global);
+  await config.update('protocol',chosen.value,vscode.ConfigurationTarget.Global);
   await setKey(endpoint);
   update({ status: `AI接口已配置为 ${endpoint.origin} / ${model.trim()}，还没有发送代码，喵。` });
 }
@@ -208,7 +209,7 @@ async function run(mode) {
       update({ status: `喵～正在讲第${i + 1}/${chunks.length}段，慢慢来，我们把它读明白。`, notes: view.notes + `${i ? '\n\n' : ''}${heading}\n` });
       outputTerminal?.line('\n' + heading);
       let lastPaint = 0;
-      const result = await api.explain({ key, endpoint: endpoint.url, model, timeoutSeconds: config.get('requestTimeoutSeconds', 120), signal: controller.signal,
+      const result = await api.explain({ key, endpoint: endpoint.url, protocol:endpoint.protocol, auth:config.get('apiAuth','auto'), model, timeoutSeconds: config.get('requestTimeoutSeconds', 120), signal: controller.signal,
         messages: core.makeMessages({ ...source, code: c.text, firstLine: c.firstLine, lastLine: c.lastLine, mode, knowledgeContext, tone: config.get('tone', '元气猫娘'), level: config.get('level', '零基础') }),
         onText: text => { view.notes += text; outputTerminal?.write(text); if (Date.now() - lastPaint > 100) { update({ notes: view.notes }); lastPaint = Date.now(); } }
       });
@@ -226,13 +227,14 @@ async function run(mode) {
   } finally { controller = undefined; running = false; }
 }
 
-async function chat() {
+async function chat(input) {
   if (running) { vscode.window.showInformationMessage('我正在学习代码，先等我一下或点击停止，喵～'); return; }
-  const question = await vscode.window.showInputBox({title:'和 fox 说说话',prompt:'仅点击确认后发送这段文字到你配置的AI；不会附带编辑器代码。',validateInput:v=>v.trim().length>0&&v.length<=6000?null:'请输入1–6000字。'});
+  const question = typeof input==='string'?input.trim():await vscode.window.showInputBox({title:'和 fox 说说话',prompt:'仅点击确认后发送这段文字到你配置的AI；不会附带编辑器代码。',validateInput:v=>v.trim().length>0&&v.length<=6000?null:'请输入1–6000字。'});
   if (!question) return;
+  if(question.length>6000)throw Error('一次最多6000字。');
   if (running) return;
   running=true; controller=new AbortController();
-  let t;
+  let t;let answer='';
   try {
     const endpoint=targetEndpoint(); let key=await savedKey(endpoint);
     if (!key&&!endpoint.local) { if (!await setKey(endpoint)) return; key=await savedKey(endpoint); }
@@ -240,9 +242,10 @@ async function chat() {
     const config=vscode.workspace.getConfiguration('foxMeow');
     t=openTerminal();t.start('fox 的聊天时间 · '+endpoint.origin);
     t.line('你：'+core.redact(question).text+'\nfox：');
-    const result=await api.explain({key,endpoint:endpoint.url,model:config.get('model','deepseek-flash'),signal:controller.signal,timeoutSeconds:config.get('requestTimeoutSeconds',120),messages:[{role:'system',content:'你是fox，温柔可爱的中文猫娘代码学习伙伴。可以说喵但专业准确优先。明确你是软件助手，不声称拥有意识或真实情感。鼓励用户独立学习。只回答用户主动提出的问题。'},{role:'user',content:core.redact(question).text}],onText:text=>t.write(text)});
+    const result=await api.explain({key,endpoint:endpoint.url,protocol:endpoint.protocol,auth:config.get('apiAuth','auto'),model:config.get('model','deepseek-flash'),signal:controller.signal,timeoutSeconds:config.get('requestTimeoutSeconds',120),messages:[{role:'system',content:'你是fox，温柔可爱的中文猫娘代码学习伙伴。可以说喵但专业准确优先。明确你是软件助手，不声称拥有意识或真实情感。鼓励用户独立学习。只回答用户主动提出的问题。'},{role:'user',content:core.redact(question).text}],onText:text=>{answer+=text;t.write(text);}});
     t.finish(result.finishReason==='stop'?'这次聊天结束啦，喵～':'输出未完整结束，可缩小问题后重试。');
-  } catch(e) { if(t)t.finish(e.message||'聊天未完成');else vscode.window.showErrorMessage(e.message); }
+    return {content:answer,complete:result.finishReason==='stop'};
+  } catch(e) { if(t)t.finish(e.message||'聊天未完成');else vscode.window.showErrorMessage(e.message);return {error:e.message||'聊天未完成'}; }
   finally {controller=undefined;running=false;}
 }
 

@@ -13,8 +13,8 @@ with tempfile.TemporaryDirectory() as temp:
     pet.toggle_quiet();assert pet.quiet
     pet.toggle_quiet()
     (mod.DATA/'learning.json').write_text(json.dumps({'at':time.time()*1000,'status':'测试：正在讲解代码'}),'utf-8')
-    pet.next_sync=0;pet.tick();assert '正在讲解代码' in pet.message.get()
+    pet.next_sync=0;pet.tick();assert '正在讲解代码' not in pet.message.get()
     pet.focus_minutes=1;pet.focus_end=time.monotonic()-1;pet.tick();assert pet.state['focusMinutes']==1
     pet.close()
     pet=mod.Pet();pet.root.withdraw();assert pet.state['pats']==1 and pet.state['focusMinutes']==1;pet.close()
-print('Desktop checks passed: interactions, state sync, focus completion, persistence, reduced motion, quiet mode')
+print('Desktop checks passed: interactions, interaction-only, focus completion, persistence, reduced motion, quiet mode')

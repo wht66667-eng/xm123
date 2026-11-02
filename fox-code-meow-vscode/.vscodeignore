@@ -10,3 +10,8 @@ test-artifacts/**
 
 **/__pycache__/**
 **/*.pyc
+
+design/**
+assets/foxgirl-atlas-v2.png
+assets/foxgirl-keyframes-clean.png
+assets/foxgirl-standing-clean.png

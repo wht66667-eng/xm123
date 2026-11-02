@@ -9,7 +9,7 @@ function harness() {
   const commands=new Map();const store=new Map();const sent=[];const state={calls:0,requests:[],input:'sk-unit-test-not-real-123456789',terminalOutput:'',config:{},imports:[],documents:[]};
   const selection={isEmpty:false,start:{line:0,character:0},end:{line:0,character:8},active:{line:0,character:0}};
   const document={fileName:'C:/project/main.py',languageId:'python',version:1,uri:{toString:()=> 'file:///project/main.py'},lineCount:1,getText:()=> 'return x',lineAt:()=>({text:'return x'})};
-  const context={subscriptions:[],extensionPath:'C:/extension',globalStorageUri:{fsPath:'C:/test-profile/fox'},secrets:{get:async k=>store.get(k),store:async(k,v)=>store.set(k,v),delete:async k=>store.delete(k)}};
+  const context={subscriptions:[],extensionPath:path.join(__dirname,'..'),globalStorageUri:{fsPath:'C:/test-profile/fox'},secrets:{get:async k=>store.get(k),store:async(k,v)=>store.set(k,v),delete:async k=>store.delete(k)}};
   const panel={reveal:()=>{},webview:{html:'',onDidReceiveMessage:()=>{},postMessage:m=>sent.push(m)},onDidDispose:()=>{}};
   const vscode={
     commands:{registerCommand:(id,fn)=>{commands.set(id,fn);return {dispose(){}};},executeCommand:async(id,...args)=>commands.has(id)?commands.get(id)(...args):[]},
@@ -94,4 +94,9 @@ test('manual chat sends only typed question and no editor source',async()=>{
 test('cancelled chat makes zero requests',async()=>{
   const h=harness();h.state.input=undefined;
   await h.commands.get('foxMeow.chat')();assert.equal(h.state.calls,0);
+});
+
+test('webview supplied chat text does not open another input dialog or attach editor code',async()=>{
+ const h=harness();h.state.config.apiBase='http://127.0.0.1:9999/v1';
+ const result=await h.commands.get('foxMeow.chat')('只发送这句话');assert.equal(h.state.calls,1);assert.equal(h.state.requests[0].messages[1].content,'只发送这句话');assert.ok(result.content);assert.ok(!JSON.stringify(h.state.requests[0].messages).includes('return x'));
 });

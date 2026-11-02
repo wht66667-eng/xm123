@@ -1,0 +1,89 @@
+[
+  {
+    "id": "agnes",
+    "label": "Agnes AI",
+    "base": "https://apihub.agnes-ai.com/v1",
+    "protocol": "chat",
+    "models": [
+      "agnes-3.0-flash",
+      "agnes-2.5-pro-beta",
+      "agnes-3.0-pro"
+    ],
+    "note": "3.0 Pro按用户文档标为即将上线，需账户开放后才能使用。"
+  },
+  {
+    "id": "deepseek",
+    "label": "DeepSeek",
+    "base": "https://api.deepseek.com",
+    "protocol": "chat",
+    "models": [
+      "deepseek-flash",
+      "deepseek-v4-pro"
+    ]
+  },
+  {
+    "id": "openai",
+    "label": "OpenAI",
+    "base": "https://api.openai.com/v1",
+    "protocol": "responses",
+    "models": [
+      "gpt-6.1-sol",
+      "gpt-6-luna",
+      "gpt-6-astra",
+      "gpt-6.1-terra"
+    ]
+  },
+  {
+    "id": "anthropic",
+    "label": "Anthropic Claude",
+    "base": "https://api.anthropic.com/v1",
+    "protocol": "messages",
+    "models": [
+      "claude-sonnet-5-5",
+      "claude-haiku-5-5",
+      "claude-opus-5-5"
+    ]
+  },
+  {
+    "id": "gemini",
+    "label": "Google Gemini（兼容接口）",
+    "base": "https://generativelanguage.googleapis.com/v1beta/openai",
+    "protocol": "chat",
+    "models": [
+      "gemini-3.8-flash"
+    ]
+  },
+  {
+    "id": "qwen",
+    "label": "通义千问 / 百炼",
+    "base": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    "protocol": "chat",
+    "models": [
+      "qwen-plus",
+      "qwen-flash"
+    ]
+  },
+  {
+    "id": "kimi",
+    "label": "Kimi / Moonshot",
+    "base": "https://api.moonshot.cn/v1",
+    "protocol": "chat",
+    "models": [],
+    "note": "请填写账户当前开放的模型ID。"
+  },
+  {
+    "id": "local",
+    "label": "本机模型 / Ollama",
+    "base": "http://127.0.0.1:11434/v1",
+    "protocol": "chat",
+    "models": [],
+    "note": "先在本机模型服务安装模型，再填写实际模型ID。"
+  },
+  {
+    "id": "custom",
+    "label": "自定义兼容服务",
+    "base": "",
+    "protocol": "chat",
+    "models": []
+  }
+]
