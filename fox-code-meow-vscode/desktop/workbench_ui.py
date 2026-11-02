@@ -28,6 +28,7 @@ def build_workbench(window):
  def snapshot():
   if window.busy:return
   selected=source.text()
+  candidate[0]=None
   def work():run[0]=optimizer.snapshot(selected);return '已建立优化副本：'+str(run[0])
   window.start_task(work,lambda:preview.setPlainText(str(run[0])))
  def check():

@@ -5,6 +5,9 @@ import os,shutil,uuid,json,subprocess,threading,hashlib,difflib
 
 class Optimizer:
     def __init__(self,data):self.data=Path(data);self.process=None;self.stopped=threading.Event()
+    def fingerprint(self,root):
+        root=Path(root)
+        return {p.relative_to(root).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in root.rglob('*') if p.is_file() and not any(x in p.relative_to(root).parts for x in ('test-artifacts','__pycache__','node_modules','.git')) and p.suffix.lower() not in ('.exe','.vsix','.pyc')}
     def stop(self):
         self.stopped.set()
         terminate_owned(self.process)
@@ -21,7 +24,8 @@ class Optimizer:
                 if p.is_symlink() or getattr(p.lstat(),'st_file_attributes',0)&1024:excluded.add(name)
             return excluded
         for folder in ['src','desktop','integrations','test','assets','third_party_licenses','agent-skills','knowledge']:
-            if (source/folder).is_dir():shutil.copytree(source/folder,target/folder,ignore=ignore,symlinks=False)
+            entry=source/folder
+            if entry.is_dir() and not entry.is_symlink() and not (getattr(entry.lstat(),'st_file_attributes',0)&1024):shutil.copytree(entry,target/folder,ignore=ignore,symlinks=False)
         for name in ['package.json','README.md','LICENSE','CHANGELOG.md','build.ps1','.vscodeignore','.gitignore']:
             if (source/name).is_file():shutil.copy2(source/name,target/name)
         manifest={str(p.relative_to(target)):hashlib.sha256(p.read_bytes()).hexdigest() for p in target.rglob('*') if p.is_file()}
@@ -42,7 +46,7 @@ class Optimizer:
         (run/'candidate.diff').write_text(''.join(diffs),'utf-8');return str(run/'candidate.diff')
     def check(self,run):
         run=Path(run);root=run/'source';node=shutil.which('node');python=shutil.which('python');self.stopped.clear();checks=[]
-        commands=[]
+        before=self.fingerprint(root);commands=[]
         if node:commands.append([node,'--test']+[str(p) for p in (root/'test').glob('*.test.cjs')])
         if python:commands.append([python,'-c',"import ast,pathlib;[ast.parse(p.read_text(encoding='utf-8-sig'),filename=str(p)) for p in pathlib.Path('desktop').glob('*.py')];print('Python syntax OK')"])
         if len(commands)<2:raise ValueError('需要本机Node和Python才能检查源码副本')
@@ -55,7 +59,8 @@ class Optimizer:
         report={'stopped':self.stopped.is_set(),'passed':len(checks)==2 and all(c['exitCode']==0 for c in checks),'checks':checks}
         draft='---\nname: fox-maintenance-'+run.name[:8]+'\ndescription: 本次fox源码副本检查提炼的开发习惯草稿。\n---\n\n先创建副本、审阅差异，再执行Node测试与Python语法检查。\n本次结果：'+('通过' if report['passed'] else '未通过或已停止')+'。\n打包必须额外验证独立EXE；保留当前版本。\n'
         (run/'SKILL.md').write_text(draft,'utf-8')
-        report['sourceHashes']={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for folder in ['src','desktop'] for p in (root/folder).rglob('*') if p.is_file() and p.suffix in ('.py','.js','.cjs')}
+        report['sourceHashes']=self.fingerprint(root)
+        if before!=report['sourceHashes']:report.update(passed=False,changedDuringCheck=True)
         (run/'checks.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),'utf-8');return report
 
     def restore(self,run):
@@ -67,7 +72,7 @@ class Optimizer:
 
     def build(self,run):
         run=Path(run);root=run/'source';report=json.loads((run/'checks.json').read_text('utf-8'))
-        current={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for folder in ['src','desktop'] for p in (root/folder).rglob('*') if p.is_file() and p.suffix in ('.py','.js','.cjs')}
+        current=self.fingerprint(root)
         if not report.get('passed') or report.get('sourceHashes')!=current:raise ValueError('先对当前副本运行检查并通过后再构建')
         node=shutil.which('node');npx_cli=Path(node).parent/'node_modules/npm/bin/npx-cli.js' if node else Path('missing')
         if not node or not npx_cli.is_file():raise ValueError('找不到Node随附的npx-cli.js，请安装完整Node.js')
