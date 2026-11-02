@@ -85,5 +85,35 @@
     "base": "",
     "protocol": "chat",
     "models": []
+  },
+  {
+    "id": "openrouter-free",
+    "label": "OpenRouter 免费模型",
+    "base": "https://openrouter.ai/api/v1",
+    "protocol": "chat",
+    "models": [
+      "openrouter/free"
+    ],
+    "note": "需要自己的密钥；免费模型有账户和每日/速率限制，以官方控制台为准。 https://openrouter.ai/docs/api/reference/limits"
+  },
+  {
+    "id": "groq-free",
+    "label": "Groq 免费层",
+    "base": "https://api.groq.com/openai/v1",
+    "protocol": "chat",
+    "models": [],
+    "note": "请填控制台开放的模型ID；免费层限额依模型与账户变化。 https://console.groq.com/docs/rate-limits"
+  },
+  {
+    "id": "freellmapi",
+    "label": "FreeLLMAPI 自建网关",
+    "base": "http://localhost:3001/v1",
+    "protocol": "chat",
+    "models": [
+      "auto",
+      "auto:fast",
+      "auto:smart"
+    ],
+    "note": "先自行部署网关并添加合法服务商密钥；fox只连接兼容接口。 https://github.com/tashfeenahmed/freellmapi"
   }
 ]

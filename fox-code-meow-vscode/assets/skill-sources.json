@@ -1,0 +1,55 @@
+[
+  {
+    "repo": "obra/superpowers",
+    "stars": 310821,
+    "commit": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b",
+    "skills": [
+      "skills/brainstorming/SKILL.md",
+      "skills/diagnosing-superpowers/SKILL.md",
+      "skills/dispatching-parallel-agents/SKILL.md"
+    ],
+    "license": "MIT"
+  },
+  {
+    "repo": "anthropics/skills",
+    "stars": 186501,
+    "commit": "ca45fc496a3436251f191354091d557da31c15b5",
+    "skills": [
+      "skills/academy-guide/SKILL.md",
+      "skills/algorithmic-art/SKILL.md",
+      "skills/brand-guidelines/SKILL.md"
+    ],
+    "license": null
+  },
+  {
+    "repo": "addyosmani/agent-skills",
+    "stars": 112629,
+    "commit": "301b02b12bff98e4688e6984af6556802322bbde",
+    "skills": [
+      "skills/api-and-interface-design/SKILL.md",
+      "skills/browser-testing-with-devtools/SKILL.md",
+      "skills/ci-cd-and-automation/SKILL.md"
+    ],
+    "license": "MIT"
+  },
+  {
+    "repo": "Leonxlnx/taste-skill",
+    "stars": 108107,
+    "commit": "12af471f627f866411b4bd785b19646d3672784c",
+    "skills": [
+      "skills/taste-skill/SKILL.md"
+    ],
+    "license": "MIT"
+  },
+  {
+    "repo": "tt-a1i/archify",
+    "stars": 92530,
+    "commit": "a4065941f12be7967436261d9934784e381d423c",
+    "skills": [
+      ".agents/skills/archify-review/SKILL.md",
+      ".agents/skills/archify-tuning/SKILL.md",
+      ".agents/skills/simplify-codebase/SKILL.md"
+    ],
+    "license": "Apache-2.0"
+  }
+]

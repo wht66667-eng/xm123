@@ -121,9 +121,9 @@ class Pet:
             walking=True
         elif self.roaming and now<self.move_until and not self.dragging and not self.sleeping:walking=True
         if walking:
-            x=self.pos_x+self.direction*3;y=self.pos_y;limit=max(0,self.root.winfo_screenwidth()-240)
+            x=self.pos_x+self.direction*3;y=self.pos_y;limit=max(0,self.root.winfo_screenwidth()-getattr(self,'roam_width',240))
             if x<0 or x>limit:self.direction*=-1;x=max(0,min(limit,x))
-            self.pos_x=x;self.pos_y=max(0,min(self.root.winfo_screenheight()-280,y));self.root.geometry(f'+{self.pos_x}+{self.pos_y}')
+            self.pos_x=x;self.pos_y=max(0,min(self.root.winfo_screenheight()-getattr(self,'roam_height',240)-40,y));self.root.geometry(f'+{self.pos_x}+{self.pos_y}')
         action='sleep' if self.sleeping else (self.action if now<self.action_until else ('wave' if walking else 'idle'))
         index=0 if self.reduce_motion or (action=='idle') else (self.frame//2)%6
         image=self.walk_left[index] if walking and self.direction<0 and action=='wave' else self.frames[action][index]

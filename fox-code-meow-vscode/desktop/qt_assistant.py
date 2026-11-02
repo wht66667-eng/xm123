@@ -15,7 +15,7 @@ QWidget#lounge{background:#FFF9F0;}QFrame#rail{background:#FCF2E4;border-right:1
 QLabel#title{font-family:"Microsoft YaHei";font-size:23px;font-weight:600;}QLabel#muted{color:#8B7665;font-size:12px;}QLabel#brand{font-family:Georgia;font-size:27px;font-weight:bold;}QLabel#badge{background:#EAF0DF;border:1px solid #D6E0C9;border-radius:14px;color:#526544;padding:5px 12px;font-size:11px;}
 QPushButton{background:#FFF8EF;border:1px solid #E5CBB3;border-radius:17px;padding:9px 16px;color:#614538;}QPushButton:hover{background:#FFEAD5;border-color:#DCA67C;}QPushButton:pressed{background:#FAD6B6;}QPushButton:focus{border:2px solid #B9683D;}QPushButton:disabled{color:#A89686;background:#EEE6DC;border-color:#E4D9CF;}
 QPushButton#primary{background:#F18A52;border:1px solid #E87F45;color:white;font-weight:600;}QPushButton#primary:hover{background:#DE7844;}QPushButton#danger{background:#B94D37;border-color:#A24030;color:white;}
-QPushButton#nav{border:0;border-radius:15px;text-align:left;padding:13px 18px;background:transparent;font-size:14px;}QPushButton#nav:checked{background:#FFD9BD;color:#5F3525;font-weight:600;}QPushButton#nav:hover{background:#FFE7D1;}
+QPushButton#nav{border:0;border-radius:15px;text-align:left;padding:8px 14px;background:transparent;font-size:13px;}QPushButton#nav:checked{background:#FFD9BD;color:#5F3525;font-weight:600;}QPushButton#nav:hover{background:#FFE7D1;}
 QFrame#card{background:rgba(255,253,247,235);border:1px solid #EBD9C5;border-radius:17px;}QFrame#composer{background:#FFFCF6;border:1px solid #E4D0B9;border-radius:22px;}
 QLineEdit,QComboBox{background:#FFFFFF;border:1px solid #E1CCB5;border-radius:12px;padding:10px 12px;selection-background-color:#FFDABD;}QLineEdit:focus,QComboBox:focus{border:2px solid #C3865E;}QComboBox::drop-down{border:0;width:24px;}QComboBox QAbstractItemView{background:#FFFCF5;selection-background-color:#FFE1C6;selection-color:#614538;}
 QPlainTextEdit{background:transparent;border:0;padding:5px;selection-background-color:#DCE6C8;}QScrollArea{border:0;background:transparent;}QScrollArea>QWidget>QWidget{background:#FFF9F0;}QScrollBar:vertical{background:transparent;width:7px;}QScrollBar::handle:vertical{background:#D8C8B7;border-radius:3px;min-height:25px;}QScrollBar::add-line:vertical,QScrollBar::sub-line:vertical{height:0;}
@@ -62,15 +62,20 @@ class AssistantWindow(QWidget):
         super().__init__(parent,Qt.Window);self.model=model;self.data=Path(data);self.library=Library(self.data/'knowledge-desktop');self.workers=queue.Queue();self.history=[];self.pending_question=None;self.busy=False;self.success_callback=None;self.setObjectName('lounge');self.setWindowTitle('fox · 陪伴小窝');self.resize(1040,750);self.setMinimumSize(820,620);self.setStyleSheet(STYLE);self.setWindowIcon(QIcon(avatar(64)));self.config=self.load_config()
         shell=QHBoxLayout(self);shell.setContentsMargins(0,0,0,0);shell.setSpacing(0)
         rail=QFrame();rail.setObjectName('rail');rail.setFixedWidth(185);rv=QVBoxLayout(rail);rv.setContentsMargins(18,28,18,20);rv.setSpacing(10)
-        icon=QLabel();icon.setPixmap(avatar(68));rv.addWidget(icon);rv.addWidget(text('fox','brand'));rv.addWidget(text('一直在这里，\n陪你一起进步。','muted'));rv.addSpacing(24)
+        icon=QLabel();icon.setPixmap(avatar(48));rv.addWidget(icon);rv.addWidget(text('fox','brand'));rv.addWidget(text('一直在这里，\n陪你一起进步。','muted'));rv.addSpacing(8)
         self.stack=QStackedWidget();self.nav=[]
-        for i,title in enumerate(['◌   聊聊天','♧   小书包','⚿   小钥匙','▱   文件整理']):
+        for i,title in enumerate(['◌   聊聊天','♧   小书包','⚿   小钥匙','▱   文件整理','⌖   ArcMap','♙   Agent小队','⌘   工作台']):
             b=btn(title,lambda checked=False,index=i:self.switch(index));b.setObjectName('nav');b.setCheckable(True);rv.addWidget(b);self.nav.append(b)
-        rv.addStretch();rv.addWidget(text('小小的日常\n也很了不起。 ♡','muted'));self.pet_icon=QLabel();self.pet_icon.setPixmap(QPixmap(str(ASSETS/'pat-3.png')).scaled(130,130,Qt.KeepAspectRatio,Qt.SmoothTransformation));rv.addWidget(self.pet_icon,0,Qt.AlignCenter)
+        rv.addStretch();rv.addWidget(text('小小的日常\n也很了不起。 ♡','muted'));self.pet_icon=QLabel();self.pet_icon.setPixmap(QPixmap(str(ASSETS/'pat-3.png')).scaled(70,70,Qt.KeepAspectRatio,Qt.SmoothTransformation));rv.addWidget(self.pet_icon,0,Qt.AlignCenter)
         shell.addWidget(rail);main=QVBoxLayout();main.setContentsMargins(28,25,28,16);shell.addLayout(main,1)
         head=QHBoxLayout();titlebox=QVBoxLayout();titlebox.addWidget(text('今天也一起进步吧 ฅ','title'));titlebox.addWidget(text('有问题时告诉我，我们把它慢慢拆开。','muted'));head.addLayout(titlebox,1);self.badge=text('已配置' if self.config else '待配置','badge');head.addWidget(self.badge,0,Qt.AlignTop);main.addLayout(head);main.addSpacing(12);main.addWidget(self.stack,1)
         self.status=text('点击发送会附带本窗口最近6轮对话；清空聊天可重置。资料导入和搜索不联网。','muted');main.addWidget(self.status)
-        self.build_chat();self.build_docs();self.build_settings();self.build_files();self.switch(0);self.refresh_docs();self.timer=QTimer(self);self.timer.timeout.connect(self.poll);self.timer.start(100)
+        self.build_chat();self.build_docs();self.build_settings();self.build_files();
+        from arcmap_ui import build_arcmap
+        self.stack.addWidget(build_arcmap(self));
+        from team_ui import build_team
+        from workbench_ui import build_workbench
+        self.stack.addWidget(build_team(self,ASSETS.parent));self.stack.addWidget(build_workbench(self));self.switch(0);self.refresh_docs();self.timer=QTimer(self);self.timer.timeout.connect(self.poll);self.timer.start(100)
     def load_config(self):
         try:return json.loads((self.data/'desktop-ai.json').read_text('utf-8'))
         except (OSError,ValueError):return {}
@@ -130,7 +135,7 @@ class AssistantWindow(QWidget):
         self.start_task(work)
     def build_docs(self):
         page=QWidget();v=QVBoxLayout(page);v.setContentsMargins(0,0,0,0);v.addWidget(text('小书包 · 我的资料库','title'));v.addWidget(text('把资料交给我，一起整理、学习。导入副本保存在本机。','muted'));drop=DropCard();drop.filesDropped.connect(self.import_paths);v.addWidget(drop)
-        row=QHBoxLayout();row.addWidget(btn('＋ 导入文档',self.choose_files,'primary'));row.addWidget(btn('导入文件夹',self.choose_folder));row.addStretch();v.addLayout(row);self.docs=QListWidget();self.docs.setSelectionMode(QListWidget.ExtendedSelection);v.addWidget(self.docs,1);self.empty_docs=text('小书包还是空的。先放进一篇文档吧。','muted');v.addWidget(self.empty_docs)
+        row=QHBoxLayout();row.addWidget(btn('＋ 导入文档',self.choose_files,'primary'));row.addWidget(btn('导入文件夹',self.choose_folder));row.addWidget(btn('连接Obsidian',self.connect_vault));row.addWidget(btn('同步笔记',self.sync_vault));row.addStretch();v.addLayout(row);self.docs=QListWidget();self.docs.setSelectionMode(QListWidget.ExtendedSelection);v.addWidget(self.docs,1);self.empty_docs=text('小书包还是空的。先放进一篇文档吧。','muted');v.addWidget(self.empty_docs)
         search=QHBoxLayout();self.search_field=QLineEdit();self.search_field.setPlaceholderText('在本机资料里搜索…');self.search_field.returnPressed.connect(self.search_local);search.addWidget(self.search_field);search.addWidget(btn('本地搜索',self.search_local));v.addLayout(search)
         row=QHBoxLayout();row.addWidget(btn('清理选中副本',self.delete_copies));row.addStretch();v.addLayout(row);self.stack.addWidget(page)
     def refresh_docs(self):
@@ -139,6 +144,15 @@ class AssistantWindow(QWidget):
             try:doc=json.loads(path.read_text('utf-8'));name=doc['name'];size=len(doc['text'].encode('utf-8'))
             except (OSError,ValueError,KeyError):continue
             item=QListWidgetItem();item.setData(Qt.UserRole,str(path));item.setSizeHint(QSize(300,75));self.docs.addItem(item);frame=QFrame();frame.setObjectName('card');layout=QHBoxLayout(frame);symbol=text('PDF' if name.lower().endswith('.pdf') else 'TXT');symbol.setStyleSheet('background:#FBE5CF;color:#A55C35;border:0;border-radius:9px;padding:9px;font-weight:bold;');layout.addWidget(symbol);titles=QVBoxLayout();titles.addWidget(text(name));titles.addWidget(text(f'本地副本 · {size/1024:.1f} KB','muted'));layout.addLayout(titles,1);self.docs.setItemWidget(item,frame)
+    def connect_vault(self):
+        from obsidian_bridge import Vault
+        folder=QFileDialog.getExistingDirectory(self,'选择Obsidian仓库（只读导入Markdown）')
+        if folder:
+            try:Vault(self.data).connect(folder);self.status.setText('Obsidian路径已保存，点击同步笔记后导入副本。')
+            except Exception as e:self.status.setText(str(e))
+    def sync_vault(self):
+        from obsidian_bridge import Vault
+        self.start_task(lambda:'Obsidian同步：成功%d篇，跳过%d项；原笔记不变。'%Vault(self.data).sync(self.library),self.refresh_docs)
     def choose_files(self):
         paths,_=QFileDialog.getOpenFileNames(self,'挑几篇资料给 fox','','学习文档 (*.txt *.md *.pdf *.docx *.py *.js *.ts *.json *.csv *.html *.css *.cjs);;所有文件 (*)')
         if paths:self.import_paths(paths)
@@ -178,10 +192,15 @@ class AssistantWindow(QWidget):
         self.auth=QComboBox()
         for label,value in [('自动匹配协议','auto'),('Authorization: Bearer','bearer'),('x-api-key','x-api-key')]:self.auth.addItem(label,value)
         for title,widget in [('服务商预设',self.provider),('API 协议',self.protocol),('接口基址或完整地址',self.base),('模型 ID（可自由填写）',self.model_id),('API Key',self.key),('认证方式',self.auth)]:fields.addWidget(text(title,'muted'));fields.addWidget(widget)
-        self.provider_note=text('模型可用性取决于服务商和你的账户权限。','muted');fields.addWidget(self.provider_note);self.provider.currentIndexChanged.connect(self.provider_changed)
+        fields.addWidget(btn('查看免费/每日额度服务目录',self.show_free_catalog));self.provider_note=text('模型可用性取决于服务商和你的账户权限。','muted');fields.addWidget(self.provider_note);self.provider.currentIndexChanged.connect(self.provider_changed)
         index=next((i for i,p in enumerate(self.providers) if self.config.get('url','').startswith(p['base']) and p['base']),8 if self.config else 1);self.provider.setCurrentIndex(index);self.provider_changed(index,initial=True)
         if self.config:self.base.setText(self.config['url']);self.model_id.setEditText(self.config['model']);self.protocol.setCurrentIndex(max(0,self.protocol.findData(self.config.get('protocol','chat'))));self.auth.setCurrentIndex(max(0,self.auth.findData(self.config.get('auth','auto'))))
         row=QHBoxLayout();row.addWidget(btn('加密保存小钥匙',self.save_settings,'primary'));row.addWidget(btn('移除已存密钥',self.remove_key));row.addStretch();v.addLayout(row);v.addWidget(text('桌面设置独立于 VS Code。密钥用 Windows 用户加密保存；不展示、不记录到对话。\nAgnes 3.0 Pro 按你提供的文档标为即将上线。所有模型 ID 均可手动修改。','muted'));v.addStretch();scroll.setWidget(body);outer.addWidget(scroll);self.stack.addWidget(page)
+    def show_free_catalog(self):
+        from PySide6.QtGui import QDesktopServices
+        from PySide6.QtCore import QUrl
+        dialog=QDialog(self);dialog.setWindowTitle('免费API目录 · 条件以官网为准');dialog.resize(660,530);dialog.setStyleSheet(STYLE);layout=QVBoxLayout(dialog);view=QTextBrowser();view.setOpenLinks(False);view.anchorClicked.connect(lambda url:QDesktopServices.openUrl(url));layout.addWidget(view)
+        entries=json.loads((ASSETS/'free-api-catalog.json').read_text('utf-8'));view.setMarkdown('\n\n'.join('## '+e['name']+' · '+e['type']+'\n'+e['condition']+'\n\n[查看来源]('+e['url']+')' for e in entries));layout.addWidget(btn('关闭',dialog.accept));dialog.exec()
     def provider_changed(self,index,initial=False):
         p=self.providers[index];self.model_id.clear();self.model_id.addItems(p.get('models',[]));self.provider_note.setText(p.get('note','模型列表为预设，实际可用性取决于账户权限。'))
         if not initial:self.base.setText(p['base']);self.protocol.setCurrentIndex(max(0,self.protocol.findData(p['protocol'])));self.key.clear()

@@ -6,3 +6,6 @@ __pycache__/
 desktop/*.exe
 .env*
 *.log
+
+knowledge/open-source-skills/**
+knowledge/*--*SKILL.md

@@ -75,7 +75,7 @@ async function configureAI() {
   if (running) { vscode.window.showInformationMessage('先等当前讲解结束，或点停止，再换接口哦。'); return; }
   const config = vscode.workspace.getConfiguration('foxMeow');
   const presets=JSON.parse(await fs.readFile(path.join(context.extensionPath,'assets','providers.json'),'utf8'));
-  const ordered=['deepseek','custom','local','agnes','openai','anthropic','gemini','qwen','kimi'];
+  const ordered=['deepseek','custom','local','agnes','openai','anthropic','gemini','qwen','kimi','openrouter-free','groq-free','freellmapi'];
   const provider=await vscode.window.showQuickPick(ordered.map(id=>presets.find(p=>p.id===id)).filter(Boolean).map(p=>({label:p.label,value:p.base||config.get('apiBase','https://api.deepseek.com'),model:p.models?.[0]||'',protocol:p.protocol,description:p.note||p.models?.join(' · ')})),{title:'fox · 选择AI服务商',placeHolder:'支持Agnes、OpenAI、Claude、Gemini及自定义接口；配置不发请求。'});
   if (!provider) return;
   const base = await vscode.window.showInputBox({ title: 'AI 接口地址', prompt: '可填基址、/v1 或完整 /chat/completions。远程需HTTPS。', value: provider.value, ignoreFocusOut: true, validateInput: value => { try { api.resolveEndpoint(value); return null; } catch (e) { return e.message; } } });

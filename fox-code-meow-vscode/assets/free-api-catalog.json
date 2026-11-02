@@ -1,0 +1,38 @@
+[
+  {
+    "name": "OpenRouter免费模型",
+    "type": "兼容聊天API",
+    "url": "https://openrouter.ai/docs/api/reference/limits",
+    "condition": "使用openrouter/free或:free模型，需要密钥；受账户每日与速率限制。"
+  },
+  {
+    "name": "Groq免费层",
+    "type": "兼容聊天API",
+    "url": "https://console.groq.com/docs/rate-limits",
+    "condition": "需要账户密钥；模型ID、每日额度与速率以控制台为准。"
+  },
+  {
+    "name": "Gemini免费层",
+    "type": "兼容聊天API",
+    "url": "https://ai.google.dev/gemini-api/docs/pricing",
+    "condition": "仅部分模型/地区/账户可用；免费层数据政策与付费层不同。"
+  },
+  {
+    "name": "FreeLLMAPI",
+    "type": "可自建网关",
+    "url": "https://github.com/tashfeenahmed/freellmapi",
+    "condition": "连接自行部署的localhost:3001/v1，统一密钥由你填写；并非内置公共免费密钥。"
+  },
+  {
+    "name": "public-apis",
+    "type": "通用API目录",
+    "url": "https://github.com/public-apis/public-apis",
+    "condition": "目录含非LLM服务，不能全部作为聊天模型调用。按各服务协议接入。"
+  },
+  {
+    "name": "本机Ollama",
+    "type": "本机模型服务",
+    "url": "https://ollama.com",
+    "condition": "无云端请求费用，需要本机安装模型与计算资源。"
+  }
+]

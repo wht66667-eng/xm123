@@ -15,4 +15,4 @@ except subprocess.TimeoutExpired:
  raise
 assert out.exists(),'missing frozen self-test result'
 result=json.loads(out.read_text('utf-8'));print(json.dumps(result,ensure_ascii=False));assert code==0 and result.get('ok'),result
-print('PASS packaged EXE: Qt imports, 4 real pages, process exits successfully, no foreign ICU DLL')
+print('PASS packaged EXE: Qt imports, 7 real pages, process exits successfully, no foreign ICU DLL')
